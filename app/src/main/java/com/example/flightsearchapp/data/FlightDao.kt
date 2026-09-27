@@ -1,0 +1,26 @@
+package com.example.flightsearchapp.data
+
+import androidx.room.Dao
+import androidx.room.Query
+import kotlinx.coroutines.flow.Flow
+
+@Dao
+interface FlightDao {
+    @Query("SELECT * from airport")
+    fun getAllAirports(): Flow<List<Airport>>
+
+    @Query("""
+            SELECT * from airport
+            WHERE iata_code != :departureCode OR name != :departureName
+            ORDER BY passengers DESC
+        """)
+    fun getDestinationAirports(departureCode: String, departureName: String): Flow<List<Airport>>
+
+    @Query("""
+        SELECT * from airport
+        WHERE iata_code LIKE '%'||:query||'%' 
+        OR name LIKE '%'||:query||'%'
+        ORDER BY passengers
+    """)
+    fun getAirportsByQuery(query: String): Flow<List<Airport>>
+}
