@@ -84,13 +84,14 @@ fun FlightCard(
 }
 
 @Composable
-private fun CodeAndName(
+fun CodeAndName(
     code: String,
     name: String,
+    modifier: Modifier = Modifier
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     ) {
         Text(
             text = code,
