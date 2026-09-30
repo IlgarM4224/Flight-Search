@@ -12,68 +12,70 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
+
+private data class SearchParams(
+    val searchQuery: String = "",
+    val isSearchActive: Boolean = false,
+    val selectedAirport: Airport? = null
+)
 
 class FlightSearchAppViewModel(private val flightRepository: FlightRepository): ViewModel() {
-    private val _searchQuery = MutableStateFlow("")
-    private val _isSearchActive = MutableStateFlow(false)
-    private val _selectedAirport = MutableStateFlow<Airport?>(null)
-
+    private val _searchParams = MutableStateFlow(SearchParams())
     @OptIn(ExperimentalCoroutinesApi::class)
-    private val _searchResults = _searchQuery.flatMapLatest { query ->
-        if (query.isBlank()) flowOf(emptyList())
-        else flightRepository.getAirportsByQueryStream(query)
-    }
+    val uiState: StateFlow<FlightSearchUiState> = _searchParams
+        .flatMapLatest { params ->
+            val searchResultsFlow = if (params.searchQuery.isBlank()) flowOf(emptyList())
+                else  flightRepository.getAirportsByQueryStream(params.searchQuery)
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private val _destinationAirports = _selectedAirport.flatMapLatest { airport ->
-        if (airport != null) {
-            flightRepository.getDestinationAirportsStream(
-                departureCode = airport.iataCode,
-                departureName = airport.name
-            )
-        } else flowOf(emptyList())
-    }
-    val uiState: StateFlow<FlightSearchUiState> = combine(
-        _searchQuery,
-        _isSearchActive,
-        _searchResults,
-        _selectedAirport,
-        _destinationAirports
-    ) { query, isActive, searchResults, selectedAirport, destinations ->
-        FlightSearchUiState(
-            searchQuery = query,
-            isSearchActive = isActive,
-            searchResults = searchResults,
-            selectedAirport = selectedAirport,
-            destinationAirports = destinations
+            val destinationsFlow = if (params.selectedAirport != null) {
+                flightRepository.getDestinationAirportsStream(
+                    departureCode = params.selectedAirport.iataCode,
+                    departureName = params.selectedAirport.name
+                )
+            } else flowOf(emptyList())
+
+
+            combine(searchResultsFlow, destinationsFlow) { searchResults, destinations ->
+                FlightSearchUiState(
+                    searchQuery = params.searchQuery,
+                    isSearchActive = params.isSearchActive,
+                    searchResults = searchResults,
+                    selectedAirport = params.selectedAirport,
+                    destinationAirports = destinations
+                )
+            }
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = FlightSearchUiState()
         )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = FlightSearchUiState()
-    )
 
     fun onQueryChange(newQuery: String) {
-        _searchQuery.value = newQuery
-        if (newQuery.isBlank()) {
-            _selectedAirport.value = null
+        _searchParams.update { current ->
+            current.copy(
+                searchQuery = newQuery,
+                selectedAirport = if (newQuery.isBlank()) null else current.selectedAirport
+            )
         }
     }
 
     fun onSearchActiveChange(isActive: Boolean) {
-        _isSearchActive.value = isActive
+        _searchParams.update { it.copy(isSearchActive = isActive) }
     }
 
     fun selectAirport(airport: Airport) {
-        _selectedAirport.value = airport
-        _searchQuery.value = airport.iataCode
-        _isSearchActive.value = false
+        _searchParams.update { current ->
+            current.copy(
+                selectedAirport = airport,
+                searchQuery = airport.iataCode,
+                isSearchActive = false
+            )
+        }
     }
 
     fun clearSearch() {
-        _searchQuery.value = ""
-        _selectedAirport.value = null
-        _isSearchActive.value = false
+        _searchParams.update { SearchParams() }
     }
 }
 
