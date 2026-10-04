@@ -14,7 +14,8 @@ class OfflineFlightRepository(private val flightDao: FlightDao): FlightRepositor
 
     override suspend fun addFavoriteFlight(favorite: Favorite) = flightDao.addFavoriteFlight(favorite)
 
-    override suspend fun deleteFavoriteFlight(favorite: Favorite) = flightDao.deleteFavoriteFlight(favorite)
+    override suspend fun deleteFavoriteFlight(departureCode: String, destinationCode: String) =
+        flightDao.deleteFavoriteFlight(departureCode, destinationCode)
 
     override fun getAllFavoriteFlightsStream(): Flow<List<Favorite>> = flightDao.getAllFavoriteFlights()
 }

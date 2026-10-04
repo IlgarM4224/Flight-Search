@@ -11,7 +11,7 @@ interface FlightRepository {
 
     suspend fun addFavoriteFlight(favorite: Favorite)
 
-    suspend fun deleteFavoriteFlight(favorite: Favorite)
+    suspend fun deleteFavoriteFlight(departureCode: String, destinationCode: String)
 
     fun getAllFavoriteFlightsStream(): Flow<List<Favorite>>
 }

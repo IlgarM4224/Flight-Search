@@ -2,4 +2,14 @@
     <string name="app_name">Flight Search app</string>
     <string name="depart">DEPART</string>
     <string name="arrive">ARRIVE</string>
+    <string name="app_title">Flight Search</string>
+    <string name="search_hint">Airport name or IATA code</string>
+    <string name="clear_search">Clear search</string>
+    <string name="flights_from">Flights from %1$s</string>
+    <string name="empty_title">Where are you flying from?</string>
+    <string name="empty_subtitle">Search for an airport to see available flights</string>
+    <string name="add_favorite">Add to favorites</string>
+    <string name="remove_favorite">Remove from favorites</string>
+    <string name="favorite_routes">Favorite routes</string>
+    <string name="favorite_routes_subtitle">Your saved flights</string>
 </resources>
