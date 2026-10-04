@@ -1,5 +1,9 @@
 package com.example.flightsearchapp.ui.screens
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.flightsearchapp.data.Airport
@@ -18,12 +22,19 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 private data class SearchParams(
-    val searchQuery: String = "",
     val isSearchActive: Boolean = false,
     val selectedAirport: Airport? = null
 )
 
 class FlightSearchAppViewModel(private val flightRepository: FlightRepository) : ViewModel() {
+
+    /**
+     * The query lives in Compose snapshot state so the TextField receives every change
+     * synchronously. Routing it through an async Flow pipeline writes stale values back
+     * and resets the cursor.
+     */
+    var searchQuery by mutableStateOf("")
+        private set
 
     private val _searchParams = MutableStateFlow(SearchParams())
 
@@ -44,11 +55,14 @@ class FlightSearchAppViewModel(private val flightRepository: FlightRepository) :
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val uiState: StateFlow<FlightSearchUiState> = _searchParams
-        .flatMapLatest { params ->
+    val uiState: StateFlow<FlightSearchUiState> = combine(
+        snapshotFlow { searchQuery },
+        _searchParams
+    ) { query, params -> query to params }
+        .flatMapLatest { (query, params) ->
             val searchResultsFlow =
-                if (params.searchQuery.isBlank()) flowOf(emptyList())
-                else flightRepository.getAirportsByQueryStream(params.searchQuery)
+                if (query.isBlank()) flowOf(emptyList())
+                else flightRepository.getAirportsByQueryStream(query)
 
             val destinationsFlow = params.selectedAirport?.let { departure ->
                 combine(
@@ -72,14 +86,13 @@ class FlightSearchAppViewModel(private val flightRepository: FlightRepository) :
                 }
             } ?: flowOf(emptyList())
 
-            // The Favorites section is needed only on the main screen (when no airport has been selected or requested)
+            // The Favorites section is needed only on the main screen (no query, no selected airport)
             val favoritesFlow =
-                if (params.searchQuery.isBlank() && params.selectedAirport == null) favoriteFlightsFlow
+                if (query.isBlank() && params.selectedAirport == null) favoriteFlightsFlow
                 else flowOf(emptyList())
 
             combine(searchResultsFlow, destinationsFlow, favoritesFlow) { searchResults, destinations, favorites ->
                 FlightSearchUiState(
-                    searchQuery = params.searchQuery,
                     isSearchActive = params.isSearchActive,
                     searchResults = searchResults,
                     selectedAirport = params.selectedAirport,
@@ -94,11 +107,9 @@ class FlightSearchAppViewModel(private val flightRepository: FlightRepository) :
         )
 
     fun onQueryChange(newQuery: String) {
-        _searchParams.update { current ->
-            current.copy(
-                searchQuery = newQuery,
-                selectedAirport = if (newQuery.isBlank()) null else current.selectedAirport
-            )
+        searchQuery = newQuery
+        if (newQuery.isBlank()) {
+            _searchParams.update { it.copy(selectedAirport = null) }
         }
     }
 
@@ -107,13 +118,13 @@ class FlightSearchAppViewModel(private val flightRepository: FlightRepository) :
     }
 
     fun selectAirport(airport: Airport) {
-        _searchParams.update {
-            it.copy(selectedAirport = airport, searchQuery = airport.iataCode, isSearchActive = false)
-        }
+        searchQuery = airport.iataCode
+        _searchParams.update { it.copy(selectedAirport = airport, isSearchActive = false) }
     }
 
     fun clearSearch() {
-        _searchParams.update { SearchParams() }
+        searchQuery = ""
+        _searchParams.value = SearchParams()
     }
 
     fun toggleFavorite(flightRow: FlightRow) {
@@ -124,14 +135,15 @@ class FlightSearchAppViewModel(private val flightRepository: FlightRepository) :
             if (flightRow.isFavorite) {
                 flightRepository.deleteFavoriteFlight(departureCode, destinationCode)
             } else {
-                flightRepository.addFavoriteFlight(Favorite(departureCode = departureCode, destinationCode = destinationCode))
+                flightRepository.addFavoriteFlight(
+                    Favorite(departureCode = departureCode, destinationCode = destinationCode)
+                )
             }
         }
     }
 }
 
 data class FlightSearchUiState(
-    val searchQuery: String = "",
     val isSearchActive: Boolean = false,
     val searchResults: List<Airport> = emptyList(),
     val selectedAirport: Airport? = null,

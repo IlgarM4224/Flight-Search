@@ -56,6 +56,7 @@ fun FlightSearchApp(
     FlightSearchAppContent(
         modifier = modifier,
         state = state,
+        searchQuery = viewModel.searchQuery,
         onQueryChange = viewModel::onQueryChange,
         onActiveChange = viewModel::onSearchActiveChange,
         onAirportSelect = viewModel::selectAirport,
@@ -69,6 +70,7 @@ fun FlightSearchApp(
 fun FlightSearchAppContent(
     modifier: Modifier = Modifier,
     state: FlightSearchUiState = FlightSearchUiState(),
+    searchQuery: String = "",
     onQueryChange: (String) -> Unit = {},
     onActiveChange: (Boolean) -> Unit = {},
     onAirportSelect: (Airport) -> Unit = {},
@@ -106,6 +108,7 @@ fun FlightSearchAppContent(
         ) {
             AirportSearchBar(
                 state = state,
+                searchQuery = searchQuery,
                 onQueryChange = onQueryChange,
                 onActiveChange = onActiveChange,
                 onAirportSelect = onAirportSelect,
@@ -121,7 +124,7 @@ fun FlightSearchAppContent(
                         onFavoriteClick = onFavoriteClick,
                     )
 
-                    state.searchQuery.isBlank() && state.favoriteFlights.isNotEmpty() -> FlightsList(
+                    searchQuery.isBlank() && state.favoriteFlights.isNotEmpty() -> FlightsList(
                         title = stringResource(R.string.favorite_routes),
                         subtitle = stringResource(R.string.favorite_routes_subtitle),
                         flights = state.favoriteFlights,
@@ -179,6 +182,7 @@ private fun FlightsList(
 @Composable
 private fun AirportSearchBar(
     state: FlightSearchUiState,
+    searchQuery: String,
     onQueryChange: (String) -> Unit,
     onActiveChange: (Boolean) -> Unit,
     onAirportSelect: (Airport) -> Unit,
@@ -188,7 +192,7 @@ private fun AirportSearchBar(
     SearchBar(
         inputField = {
             SearchBarDefaults.InputField(
-                query = state.searchQuery,
+                query = searchQuery,
                 onQueryChange = onQueryChange,
                 onSearch = { onActiveChange(false) },
                 expanded = state.isSearchActive,
@@ -196,7 +200,7 @@ private fun AirportSearchBar(
                 placeholder = { Text(stringResource(R.string.search_hint)) },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 trailingIcon = {
-                    if (state.searchQuery.isNotEmpty()) {
+                    if (searchQuery.isNotEmpty()) {
                         IconButton(onClick = onClearClick) {
                             Icon(
                                 imageVector = Icons.Default.Clear,
