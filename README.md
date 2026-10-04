@@ -4,6 +4,9 @@ An Android app for searching airports and browsing available flights, with the a
 
 The app works fully offline: all data lives in a local Room database pre-populated from an asset file.
 
+**Source code:**
+[Browse the app package on GitHub ](https://github.com/IlgarM4224/Flight-Search/tree/main/app/src/main/java/com/example/flightsearchapp)
+
 ## Screenshots
 
 | Home (empty)                                                                                  | Home (favorites)                                                                                  |
