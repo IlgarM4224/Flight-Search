@@ -8,11 +8,11 @@ The app works fully offline: all data lives in a local Room database pre-populat
 
 | Home (empty)                                                                                  | Home (favorites)                                                                                  |
 |:----------------------------------------------------------------------------------------------|:--------------------------------------------------------------------------------------------------|
-| <img src="readmeassets/HomeScreenEmpty.png" width="200" alt="Home screen (empty)" />          | <img src="readmeassets/HomeScreenFavorite.png" width="200" alt="Home screen (favorites)" />       |
+| <img src="readmeassets/HomeScreenEmpty.png" width="340" alt="Home screen (empty)" />          | <img src="readmeassets/HomeScreenFavorite.png" width="340" alt="Home screen (favorites)" />       |
 
 | Search                                                                                        | Search result                                                                                     |
 |:----------------------------------------------------------------------------------------------|:--------------------------------------------------------------------------------------------------|
-| <img src="readmeassets/Search.png" width="200" alt="Search" />                                | <img src="readmeassets/SearchResult.png" width="200" alt="Search result" />                       |
+| <img src="readmeassets/Search.png" width="340" alt="Search" />                                | <img src="readmeassets/SearchResult.png" width="340" alt="Search result" />                       |
 
 
 ## Features
