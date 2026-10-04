@@ -99,7 +99,7 @@ Flights are generated on the fly: for the selected airport, every other airport 
 
 1. Clone the repository:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/IlgarM4224/Flight-Search/tree/main/app/src/main/java/com/example/flightsearchapp
    ```
 2. Open the project in **Android Studio** (the latest stable version is recommended).
 3. Wait for Gradle sync to finish.
